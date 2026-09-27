@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-import { invoke as forgeInvoke } from '@forge/bridge';
 import { Briefcase, ChevronRight, HardDrive, Shield, HelpCircle } from 'lucide-react';
 import './index.css';
 
@@ -8,8 +7,11 @@ import './index.css';
 
 const isForge = process.env.NODE_ENV === 'production' || window.self !== window.top;
 
-function invoke<T>(name: string, payload?: any): Promise<T> {
-  if (isForge) return forgeInvoke<T>(name, payload) as unknown as Promise<T>;
+async function invoke<T>(name: string, payload?: any): Promise<T> {
+  if (isForge) {
+    const { invoke: forgeInvoke } = await import('@forge/bridge');
+    return forgeInvoke<T>(name, payload) as unknown as Promise<T>;
+  }
   
   console.log(`[Mock Invoke] ${name}`, payload);
   return new Promise((resolve) => {
