@@ -2,6 +2,7 @@
   "name": "customer-portal",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@forge/bridge": "^7.0.0",
     "@testing-library/dom": "^10.4.2",

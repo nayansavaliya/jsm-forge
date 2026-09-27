@@ -1,0 +1,367 @@
+// AUTO-GENERATED FILE. DO NOT EDIT.
+export const mockConfig = {
+  "global": {
+    "company": {
+      "name": "Acme Corp",
+      "logo": "https://cdn.acme.com/logo.png"
+    },
+    "portal": {
+      "title": "Acme Help Center",
+      "welcomeMessage": "How can we help you today?"
+    },
+    "notifications": {
+      "defaultChannel": "slack",
+      "slack": {
+        "webhookSecretKey": "SLACK_WEBHOOK_URL"
+      },
+      "email": {
+        "fromAddress": "helpdesk@acme.com"
+      }
+    }
+  },
+  "apiSources": [
+    {
+      "id": "api-hris",
+      "name": "HR Information System",
+      "baseUrl": "https://hris.acme.com/api/v3",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "allowedPaths": [
+        "/employees/*",
+        "/departments/*",
+        "/positions"
+      ],
+      "timeout": 8000,
+      "retries": 3,
+      "authType": "api-key",
+      "auth": {
+        "credentialSecretKey": "HRIS_API_KEY",
+        "placement": "header",
+        "headerName": "X-API-Key"
+      }
+    },
+    {
+      "id": "api-inventory",
+      "name": "Hardware Inventory System",
+      "baseUrl": "https://internal.acme.com/inventory/api",
+      "headers": {
+        "X-App-ID": "jsm-forge"
+      },
+      "allowedPaths": [
+        "/hardware/*",
+        "/software/*"
+      ],
+      "timeout": 5000,
+      "retries": 2,
+      "authType": "login-bearer",
+      "auth": {
+        "loginUrl": "https://auth.acme.com/login",
+        "usernameSecretKey": "INV_API_USER",
+        "passwordSecretKey": "INV_API_PASS",
+        "tokenPath": "data.accessToken",
+        "expiresInPath": "data.expiresIn",
+        "tokenPrefix": "Bearer"
+      }
+    }
+  ],
+  "departments": [
+    {
+      "id": "dept-hr",
+      "name": "Human Resources",
+      "jsmProjectKey": "HR",
+      "icon": "people",
+      "color": "#00B8D9",
+      "slaCalendar": "Business Hours",
+      "sla": {
+        "firstResponseHours": 8,
+        "resolutionHours": 72
+      },
+      "agents": [
+        {
+          "accountId": "REPLACE_WITH_HR_AGENT_ACCOUNT_ID"
+        }
+      ],
+      "escalation": {
+        "afterBreachMinutes": 60,
+        "notifyAccountId": "REPLACE_WITH_HR_MANAGER_ACCOUNT_ID"
+      },
+      "requestTypes": [
+        {
+          "id": "rt-hr-onboarding",
+          "name": "New Employee Onboarding",
+          "description": "Request equipment, access, and onboarding tasks for a new joiner",
+          "icon": "person-add",
+          "jsmRequestTypeId": null,
+          "form": {
+            "version": 1,
+            "fields": [
+              {
+                "id": "f_new_employee_name",
+                "label": "New Employee Full Name",
+                "type": "text",
+                "required": true,
+                "pii": true,
+                "readOnly": false,
+                "cacheTtlSeconds": 300
+              },
+              {
+                "id": "f_start_date",
+                "label": "Start Date",
+                "type": "date",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "cacheTtlSeconds": 300
+              },
+              {
+                "id": "f_department",
+                "label": "Department",
+                "type": "dynamic-select",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "apiSourceId": "api-hris",
+                "apiPath": "/departments",
+                "valueKey": "id",
+                "labelKey": "name",
+                "cacheTtlSeconds": 600
+              },
+              {
+                "id": "f_job_title",
+                "label": "Job Title",
+                "type": "dynamic-select",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "apiSourceId": "api-hris",
+                "apiPath": "/positions?deptId={{f_department}}",
+                "dependsOn": "f_department",
+                "valueKey": "id",
+                "labelKey": "title",
+                "cacheTtlSeconds": 600
+              },
+              {
+                "id": "f_laptop_required",
+                "label": "Laptop Required?",
+                "type": "select",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "options": [
+                  {
+                    "value": "yes",
+                    "label": "Yes"
+                  },
+                  {
+                    "value": "no",
+                    "label": "No — using existing equipment"
+                  }
+                ],
+                "cacheTtlSeconds": 300
+              },
+              {
+                "id": "f_additional_notes",
+                "label": "Additional Notes",
+                "type": "textarea",
+                "required": false,
+                "pii": false,
+                "readOnly": false,
+                "cacheTtlSeconds": 300,
+                "validation": {
+                  "maxLength": 300
+                }
+              }
+            ],
+            "conditions": [
+              {
+                "when": {
+                  "fieldId": "f_laptop_required",
+                  "operator": "equals",
+                  "value": "yes"
+                },
+                "show": [
+                  "f_additional_notes"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "queues": [
+        {
+          "id": "queue-hr-new-starters",
+          "name": "👋 New Starters",
+          "jql": "project = HR AND \"Request Type\" = \"New Employee Onboarding\" AND status != Done ORDER BY \"Start Date\" ASC\n",
+          "columns": [
+            "issueKey",
+            "summary",
+            "assignee",
+            "status",
+            "created"
+          ],
+          "autoAssign": false,
+          "notifyOnNew": {
+            "channel": "slack",
+            "target": "#hr-new-starters"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dept-it",
+      "name": "IT Support",
+      "jsmProjectKey": "IT",
+      "icon": "laptop",
+      "color": "#0052CC",
+      "slaCalendar": "Business Hours",
+      "sla": {
+        "firstResponseHours": 4,
+        "resolutionHours": 24
+      },
+      "agents": [
+        {
+          "accountId": "REPLACE_WITH_ACCOUNT_ID"
+        }
+      ],
+      "escalation": {
+        "afterBreachMinutes": 30,
+        "notifyAccountId": "REPLACE_WITH_MANAGER_ACCOUNT_ID"
+      },
+      "requestTypes": [
+        {
+          "id": "rt-it-hardware",
+          "name": "Hardware Request",
+          "description": "Request a new laptop, monitor, or peripheral device",
+          "icon": "laptop",
+          "jsmRequestTypeId": null,
+          "form": {
+            "version": 1,
+            "fields": [
+              {
+                "id": "f_hardware_type",
+                "label": "Hardware Type",
+                "type": "dynamic-select",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "apiSourceId": "api-inventory",
+                "apiPath": "/hardware/types",
+                "valueKey": "id",
+                "labelKey": "name",
+                "cacheTtlSeconds": 300
+              },
+              {
+                "id": "f_model",
+                "label": "Model",
+                "type": "cascading-select",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "apiSourceId": "api-inventory",
+                "apiPath": "/hardware/models?typeId={{f_hardware_type}}",
+                "dependsOn": "f_hardware_type",
+                "valueKey": "modelId",
+                "labelKey": "modelName",
+                "cacheTtlSeconds": 120
+              },
+              {
+                "id": "f_quantity",
+                "label": "Quantity",
+                "type": "number",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "cacheTtlSeconds": 300,
+                "validation": {
+                  "min": 1,
+                  "max": 10
+                }
+              },
+              {
+                "id": "f_justification",
+                "label": "Business Justification",
+                "type": "textarea",
+                "required": true,
+                "pii": false,
+                "readOnly": false,
+                "cacheTtlSeconds": 300,
+                "validation": {
+                  "minLength": 20,
+                  "maxLength": 500
+                }
+              },
+              {
+                "id": "f_needed_by",
+                "label": "Needed By Date",
+                "type": "date",
+                "required": false,
+                "pii": false,
+                "readOnly": false,
+                "cacheTtlSeconds": 300
+              }
+            ],
+            "conditions": [
+              {
+                "when": {
+                  "fieldId": "f_hardware_type",
+                  "operator": "equals",
+                  "value": "laptop"
+                },
+                "show": [
+                  "f_model",
+                  "f_quantity"
+                ]
+              }
+            ],
+            "approval": {
+              "enabled": true,
+              "stages": [
+                {
+                  "name": "Line Manager Approval",
+                  "approverType": "reporter-manager"
+                },
+                {
+                  "name": "Finance Approval",
+                  "approverType": "specific",
+                  "approverAccountId": "REPLACE_WITH_FINANCE_ACCOUNT_ID",
+                  "condition": "f_quantity > 3"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "queues": [
+        {
+          "id": "queue-it-p1",
+          "name": "🔴 Critical P1 Issues",
+          "jql": "project = IT AND priority = Highest AND status != Done ORDER BY created ASC\n",
+          "columns": [
+            "issueKey",
+            "summary",
+            "assignee",
+            "priority",
+            "created",
+            "sla"
+          ],
+          "highlightRules": [
+            {
+              "condition": "sla.breaching == true",
+              "color": "#FF5630"
+            },
+            {
+              "condition": "priority == Highest AND age > 2h",
+              "color": "#FFAB00"
+            }
+          ],
+          "autoAssign": false,
+          "notifyOnNew": {
+            "channel": "slack",
+            "target": "#it-critical"
+          }
+        }
+      ]
+    }
+  ]
+};

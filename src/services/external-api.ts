@@ -7,13 +7,10 @@
  * Caches responses in Forge KV Storage with per-field TTL.
  */
 
-import { fetch as forgeFetch } from '@forge/api';
+import { fetch as forgeFetch, storage } from '@forge/api';
 import { getConfig } from '../config-loader';
 import { getAuthValue } from './token-cache';
 import type { ApiSource } from '../config-loader/schema';
-
-// storage is a Forge runtime global — declared in src/types/forge.d.ts
-declare const storage: ForgeStorage;
 
 export interface FieldOption {
   value: string;
@@ -182,7 +179,7 @@ export async function resolveFieldOptions(params: {
 
   // ── Cache check
   const cacheKey = buildCacheKey(source.id, resolvedPath, params.dependsOnValue);
-  const cached = await storage.get<CachedOptions>(cacheKey);
+  const cached = await storage.get(cacheKey) as CachedOptions | undefined;
   if (cached && cached.expiresAt > Date.now()) {
     return { options: cached.options, cached: true };
   }
@@ -193,7 +190,7 @@ export async function resolveFieldOptions(params: {
 
   // ── Store in cache
   const ttlMs = (params.cacheTtlSeconds ?? 300) * 1000;
-  await storage.set(cacheKey, { options, expiresAt: Date.now() + ttlMs } satisfies CachedOptions);
+  await storage.set(cacheKey, { options, expiresAt: Date.now() + ttlMs } as CachedOptions);
 
   return { options, cached: false };
 }

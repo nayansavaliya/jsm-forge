@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "forge build",
-    "deploy": "forge deploy",
+    "deploy": "ts-node scripts/generate-mock-data.ts && forge deploy",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "validate-config": "ts-node scripts/validate-config.ts",
@@ -18,8 +18,9 @@
     "format": "prettier --write \"src/**/*.ts\" \"config/**/*.yaml\" \"scripts/**/*.ts\""
   },
   "dependencies": {
-    "@forge/api": "^8.1.0",
+    "@forge/api": "^7.2.2",
     "@forge/resolver": "^2.0.0",
+    "@forge/storage": "^2.0.3",
     "js-yaml": "^4.1.0",
     "zod": "^3.23.8"
   },

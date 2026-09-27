@@ -10,12 +10,8 @@
  * A 30-second safety buffer ensures we re-fetch before actual expiry.
  */
 
-import { fetch as forgeFetch } from '@forge/api';
+import { fetch as forgeFetch, storage } from '@forge/api';
 import type { ApiSource } from '../config-loader/schema';
-
-// storage and secrets are Forge runtime globals — declared in src/types/forge.d.ts
-declare const storage: ForgeStorage;
-declare const secrets: ForgeSecrets;
 
 interface CachedToken {
   token: string;
@@ -35,12 +31,12 @@ const DEFAULT_TTL_MS = 3_600_000; // 1 hour fallback
 export async function getAuthValue(source: ApiSource): Promise<string> {
   switch (source.authType) {
     case 'api-key': {
-      // Static key — always fetch from Forge Secrets, no caching
-      return await secrets.get(source.auth.credentialSecretKey) as string;
+      // Static key — fetch from environment variables, no caching
+      return process.env[source.auth.credentialSecretKey] as string;
     }
     case 'login-bearer':
     case 'oauth2-client-credentials': {
-      const cached = await storage.get<CachedToken>(`token::${source.id}`);
+      const cached = await storage.get(`token::${source.id}`) as CachedToken | undefined;
       if (cached && cached.expiresAt - Date.now() > TOKEN_BUFFER_MS) {
         return buildAuthHeader(source.auth.tokenPrefix ?? 'Bearer', cached.token);
       }
@@ -65,8 +61,8 @@ async function fetchFreshToken(
 async function fetchLoginBearerToken(
   source: ApiSource & { authType: 'login-bearer' },
 ): Promise<string> {
-  const username = (await secrets.get(source.auth.usernameSecretKey)) as string;
-  const password = (await secrets.get(source.auth.passwordSecretKey)) as string;
+  const username = process.env[source.auth.usernameSecretKey] as string;
+  const password = process.env[source.auth.passwordSecretKey] as string;
 
   const res = await forgeFetch(source.auth.loginUrl, {
     method: 'POST',
@@ -92,8 +88,8 @@ async function fetchLoginBearerToken(
 async function fetchOAuth2Token(
   source: ApiSource & { authType: 'oauth2-client-credentials' },
 ): Promise<string> {
-  const clientId = (await secrets.get(source.auth.clientIdSecretKey)) as string;
-  const clientSecret = (await secrets.get(source.auth.clientSecretSecretKey)) as string;
+  const clientId = process.env[source.auth.clientIdSecretKey] as string;
+  const clientSecret = process.env[source.auth.clientSecretSecretKey] as string;
 
   const params = new URLSearchParams({
     grant_type: 'client_credentials',
@@ -126,7 +122,7 @@ async function storeToken(sourceId: string, token: string, ttlMs: number): Promi
   await storage.set(`token::${sourceId}`, {
     token,
     expiresAt: Date.now() + ttlMs,
-  } satisfies CachedToken);
+  } as CachedToken);
 }
 
 function buildAuthHeader(prefix: string, token: string): string {

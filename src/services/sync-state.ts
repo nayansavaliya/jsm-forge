@@ -12,7 +12,7 @@
  *      Used by the dry-run to show drift age and by dashboards/logging.
  */
 
-// storage is a Forge runtime global — declared in src/types/forge.d.ts
+import { storage } from '@forge/api';
 
 // ─── Key builders ─────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ export async function setServiceDeskId(
 export async function getServiceDeskId(
   projectKey: string,
 ): Promise<string | undefined> {
-  return storage.get<string>(sdKey(projectKey));
+  return storage.get(sdKey(projectKey)) as Promise<string | undefined>;
 }
 
 // ─── Request Type ID mappings ─────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export async function setRequestTypeId(
 export async function getRequestTypeId(
   configId: string,
 ): Promise<string | undefined> {
-  return storage.get<string>(rtKey(configId));
+  return storage.get(rtKey(configId)) as Promise<string | undefined>;
 }
 
 /** Resolve the effective JSM request type ID:
@@ -81,7 +81,7 @@ export async function setQueueId(configId: string, jsmId: string): Promise<void>
 }
 
 export async function getQueueId(configId: string): Promise<string | undefined> {
-  return storage.get<string>(queueKey(configId));
+  return storage.get(queueKey(configId)) as Promise<string | undefined>;
 }
 
 // ─── Sync journal ─────────────────────────────────────────────────────────────
@@ -103,5 +103,5 @@ export async function writeSyncJournal(entry: SyncJournalEntry): Promise<void> {
 export async function readSyncJournal(
   deptId: string,
 ): Promise<SyncJournalEntry | undefined> {
-  return storage.get<SyncJournalEntry>(journalKey(deptId));
+  return storage.get(journalKey(deptId)) as Promise<SyncJournalEntry | undefined>;
 }

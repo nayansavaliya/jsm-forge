@@ -44,8 +44,8 @@ async function invoke<T>(name: string, payload?: any): Promise<T> {
         case 'getFormDefinition': {
           // Iterate to find the specific request type
           let foundRt: any = null;
-          for (const d of mockConfig.departments) {
-            const rt = d.requestTypes.find((r: any) => r.id === payload?.requestTypeId);
+          for (const d of (mockConfig.departments as any[])) {
+            const rt = (d.requestTypes as any[]).find((r: any) => r.id === payload?.requestTypeId);
             if (rt) {
               foundRt = rt;
               break;
@@ -70,6 +70,16 @@ async function invoke<T>(name: string, payload?: any): Promise<T> {
           } else {
             resolve({ fields: [] } as any);
           }
+          break;
+        }
+        case 'getFieldOptions': {
+          resolve({
+            options: [
+              { value: 'opt1', label: 'Option 1 (Mock)' },
+              { value: 'opt2', label: 'Option 2 (Mock)' },
+              { value: 'opt3', label: 'Option 3 (Mock)' }
+            ]
+          } as any);
           break;
         }
         default:
@@ -275,7 +285,7 @@ function DynamicField({ field, value, allValues, onChange }: any) {
         valueKey: field.valueKey,
         labelKey: field.labelKey,
       })
-        .then((res: any) => setOptions(res.options))
+        .then((res: any) => setOptions(res?.options || []))
         .catch((err) => console.error('Failed to load options', err))
         .finally(() => setLoadingOpts(false));
     }
