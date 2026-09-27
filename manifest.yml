@@ -71,6 +71,5 @@ permissions:
         - "*"  # Locked down per-source via allowedPaths whitelist in config
 
 app:
-  id: ari:cloud:ecosystem::app/jsm-forge-service-desk  # replace after forge create
   name: Enterprise Service Desk
 

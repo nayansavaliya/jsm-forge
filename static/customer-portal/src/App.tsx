@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import { Briefcase, ChevronRight, HardDrive, Shield, HelpCircle } from 'lucide-react';
 import './index.css';
+import mockConfig from './mock-config.json';
 
 // ─── Local Mock for Dev ─────────────────────────────────────────────────────
 
@@ -17,41 +18,60 @@ async function invoke<T>(name: string, payload?: any): Promise<T> {
   return new Promise((resolve) => {
     setTimeout(() => {
       switch (name) {
-        case 'getDepartments':
-          resolve([
-            { id: 'dept-it', name: 'IT Support', icon: 'hard-drive', color: '#3B82F6' },
-            { id: 'dept-hr', name: 'Human Resources', icon: 'briefcase', color: '#10B981' },
-          ] as any);
+        case 'getDepartments': {
+          const depts = mockConfig.departments.map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            icon: d.icon || 'briefcase',
+            color: d.color || '#3B82F6',
+          }));
+          resolve(depts as any);
           break;
-        case 'getRequestTypes':
-          if (payload?.deptId === 'dept-it') {
-            resolve([
-              { id: 'rt-laptop', name: 'Request a Laptop', description: 'Get a new machine for work' },
-              { id: 'rt-access', name: 'System Access', description: 'Request access to internal tools' },
-            ] as any);
+        }
+        case 'getRequestTypes': {
+          const dept = mockConfig.departments.find((d: any) => d.id === payload?.deptId);
+          if (dept) {
+            resolve(dept.requestTypes.map((rt: any) => ({
+              id: rt.id,
+              name: rt.name,
+              description: rt.description,
+            })) as any);
           } else {
-            resolve([
-              { id: 'rt-onboarding', name: 'Onboarding', description: 'New employee setup' },
-            ] as any);
+            resolve([] as any);
           }
           break;
-        case 'getFormDefinition':
-          resolve({
-            fields: [
-              { id: 'f_title', label: 'Summary', type: 'text', required: true },
-              { id: 'f_description', label: 'Details', type: 'textarea', required: true },
-              { 
-                id: 'f_priority', 
-                label: 'Priority', 
-                type: 'select', 
-                options: [
-                  { value: 'high', label: 'High - System Down' },
-                  { value: 'low', label: 'Low - General Inquiry' }
-                ]
+        }
+        case 'getFormDefinition': {
+          // Iterate to find the specific request type
+          let foundRt: any = null;
+          for (const d of mockConfig.departments) {
+            const rt = d.requestTypes.find((r: any) => r.id === payload?.requestTypeId);
+            if (rt) {
+              foundRt = rt;
+              break;
+            }
+          }
+          
+          if (foundRt) {
+            // Mock dynamic options resolving for testing (e.g. priority)
+            const fields = foundRt.form.fields.map((f: any) => {
+              if (f.dynamicOptions) {
+                return {
+                  ...f,
+                  options: [
+                    { value: 'dyn1', label: 'Dynamic Option 1' },
+                    { value: 'dyn2', label: 'Dynamic Option 2' }
+                  ]
+                };
               }
-            ]
-          } as any);
+              return f;
+            });
+            resolve({ fields } as any);
+          } else {
+            resolve({ fields: [] } as any);
+          }
           break;
+        }
         default:
           resolve({} as any);
       }
