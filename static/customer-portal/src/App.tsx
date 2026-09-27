@@ -1,8 +1,61 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-import { invoke } from '@forge/bridge';
+import { invoke as forgeInvoke } from '@forge/bridge';
 import { Briefcase, ChevronRight, HardDrive, Shield, HelpCircle } from 'lucide-react';
 import './index.css';
+
+// ─── Local Mock for Dev ─────────────────────────────────────────────────────
+
+const isForge = process.env.NODE_ENV === 'production' || window.self !== window.top;
+
+function invoke<T>(name: string, payload?: any): Promise<T> {
+  if (isForge) return forgeInvoke<T>(name, payload) as unknown as Promise<T>;
+  
+  console.log(`[Mock Invoke] ${name}`, payload);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      switch (name) {
+        case 'getDepartments':
+          resolve([
+            { id: 'dept-it', name: 'IT Support', icon: 'hard-drive', color: '#3B82F6' },
+            { id: 'dept-hr', name: 'Human Resources', icon: 'briefcase', color: '#10B981' },
+          ] as any);
+          break;
+        case 'getRequestTypes':
+          if (payload?.deptId === 'dept-it') {
+            resolve([
+              { id: 'rt-laptop', name: 'Request a Laptop', description: 'Get a new machine for work' },
+              { id: 'rt-access', name: 'System Access', description: 'Request access to internal tools' },
+            ] as any);
+          } else {
+            resolve([
+              { id: 'rt-onboarding', name: 'Onboarding', description: 'New employee setup' },
+            ] as any);
+          }
+          break;
+        case 'getFormDefinition':
+          resolve({
+            fields: [
+              { id: 'f_title', label: 'Summary', type: 'text', required: true },
+              { id: 'f_description', label: 'Details', type: 'textarea', required: true },
+              { 
+                id: 'f_priority', 
+                label: 'Priority', 
+                type: 'select', 
+                options: [
+                  { value: 'high', label: 'High - System Down' },
+                  { value: 'low', label: 'Low - General Inquiry' }
+                ]
+              }
+            ]
+          } as any);
+          break;
+        default:
+          resolve({} as any);
+      }
+    }, 500);
+  });
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
