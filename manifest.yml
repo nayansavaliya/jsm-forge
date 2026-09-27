@@ -1,0 +1,76 @@
+modules:
+  # ── Customer-facing portal (global page in JSM) ─────────────────────────────
+  jira:globalPage:
+    - key: jsm-service-portal
+      resource: customer-portal
+      resolver:
+        function: main-resolver
+      title: Company Help Center
+      layout: basic
+
+  # ── Agent queue panel (shown inside each JSM project queue view) ─────────────
+  jira:serviceDesk:portalRequestDetail:
+    - key: request-detail-panel
+      resource: customer-portal
+      resolver:
+        function: main-resolver
+      title: Request Details
+
+  # ── Scheduled trigger: sync config → JSM on deploy ──────────────────────────
+  scheduledTrigger:
+    - key: config-sync-trigger
+      function: sync-engine
+      interval: daily          # re-sync daily to detect and heal drift
+
+  # ── Issue event triggers ─────────────────────────────────────────────────────
+  trigger:
+    - key: issue-created-trigger
+      function: issue-event-handler
+      events:
+        - jira:issue_created
+
+    - key: issue-updated-trigger
+      function: issue-event-handler
+      events:
+        - jira:issue_updated
+
+    - key: issue-resolved-trigger
+      function: issue-event-handler
+      events:
+        - jira:issue_resolved
+
+  # ── Forge Functions ──────────────────────────────────────────────────────────
+  function:
+    - key: main-resolver
+      handler: src/index.handler
+
+    - key: sync-engine
+      handler: src/engine/sync.handler
+
+    - key: issue-event-handler
+      handler: src/triggers/issue-events.handler
+
+resources:
+  - key: customer-portal
+    path: static/customer-portal/build
+    tunnel:
+      port: 3000
+
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - read:servicedesk-request
+    - write:servicedesk-request
+    - manage:jira-project
+    - manage:jira-configuration
+    - storage:app
+  external:
+    fetch:
+      backend:
+        - "*"  # Locked down per-source via allowedPaths whitelist in config
+
+app:
+  id: ari:cloud:ecosystem::app/jsm-forge-service-desk  # replace after forge create
+  name: Enterprise Service Desk
+

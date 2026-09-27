@@ -1,0 +1,19 @@
+id: queue-hr-new-starters
+name: "👋 New Starters"
+jql: >
+  project = HR
+  AND "Request Type" = "New Employee Onboarding"
+  AND status != Done
+  ORDER BY "Start Date" ASC
+
+columns:
+  - issueKey
+  - summary
+  - assignee
+  - status
+  - created
+
+autoAssign: false
+notifyOnNew:
+  channel: slack
+  target: "#hr-new-starters"

@@ -1,0 +1,26 @@
+id: queue-it-p1
+name: "🔴 Critical P1 Issues"
+jql: >
+  project = IT
+  AND priority = Highest
+  AND status != Done
+  ORDER BY created ASC
+
+columns:
+  - issueKey
+  - summary
+  - assignee
+  - priority
+  - created
+  - sla
+
+highlightRules:
+  - condition: "sla.breaching == true"
+    color: "#FF5630"
+  - condition: "priority == Highest AND age > 2h"
+    color: "#FFAB00"
+
+autoAssign: false
+notifyOnNew:
+  channel: slack
+  target: "#it-critical"

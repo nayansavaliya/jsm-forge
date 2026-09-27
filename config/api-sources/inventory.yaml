@@ -1,0 +1,22 @@
+id: api-inventory
+name: "Hardware Inventory System"
+baseUrl: "https://internal.acme.com/inventory/api"
+
+authType: login-bearer
+auth:
+  loginUrl: "https://auth.acme.com/login"
+  usernameSecretKey: INV_API_USER
+  passwordSecretKey: INV_API_PASS
+  tokenPath: "data.accessToken"
+  expiresInPath: "data.expiresIn"
+  tokenPrefix: "Bearer"
+
+headers:
+  X-App-ID: jsm-forge
+
+allowedPaths:
+  - /hardware/*
+  - /software/*
+
+timeout: 5000
+retries: 2

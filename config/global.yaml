@@ -1,0 +1,14 @@
+company:
+  name: "Acme Corp"
+  logo: "https://cdn.acme.com/logo.png"
+
+portal:
+  title: "Acme Help Center"
+  welcomeMessage: "How can we help you today?"
+
+notifications:
+  defaultChannel: slack
+  slack:
+    webhookSecretKey: SLACK_WEBHOOK_URL
+  email:
+    fromAddress: "helpdesk@acme.com"

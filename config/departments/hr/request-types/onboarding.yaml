@@ -1,0 +1,65 @@
+id: rt-hr-onboarding
+name: "New Employee Onboarding"
+description: "Request equipment, access, and onboarding tasks for a new joiner"
+icon: person-add
+jsmRequestTypeId: ~
+
+form:
+  version: 1
+  fields:
+    - id: f_new_employee_name
+      label: "New Employee Full Name"
+      type: text
+      required: true
+      pii: true
+
+    - id: f_start_date
+      label: "Start Date"
+      type: date
+      required: true
+
+    - id: f_department
+      label: "Department"
+      type: dynamic-select
+      required: true
+      apiSourceId: api-hris
+      apiPath: /departments
+      valueKey: id
+      labelKey: name
+      cacheTtlSeconds: 600
+
+    - id: f_job_title
+      label: "Job Title"
+      type: dynamic-select
+      required: true
+      dependsOn: f_department
+      apiSourceId: api-hris
+      apiPath: "/positions?deptId={{f_department}}"
+      valueKey: id
+      labelKey: title
+      cacheTtlSeconds: 600
+
+    - id: f_laptop_required
+      label: "Laptop Required?"
+      type: select
+      required: true
+      options:
+        - value: "yes"
+          label: "Yes"
+        - value: "no"
+          label: "No — using existing equipment"
+
+    - id: f_additional_notes
+      label: "Additional Notes"
+      type: textarea
+      required: false
+      validation:
+        maxLength: 300
+
+  conditions:
+    - when:
+        fieldId: f_laptop_required
+        operator: equals
+        value: "yes"
+      show:
+        - f_additional_notes

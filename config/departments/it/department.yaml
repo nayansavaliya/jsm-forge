@@ -1,0 +1,17 @@
+id: dept-it
+name: IT Support
+jsmProjectKey: IT
+icon: laptop
+color: "#0052CC"
+
+slaCalendar: "Business Hours"
+sla:
+  firstResponseHours: 4
+  resolutionHours: 24
+
+agents:
+  - accountId: "REPLACE_WITH_ACCOUNT_ID"
+
+escalation:
+  afterBreachMinutes: 30
+  notifyAccountId: "REPLACE_WITH_MANAGER_ACCOUNT_ID"

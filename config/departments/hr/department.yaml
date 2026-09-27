@@ -1,0 +1,17 @@
+id: dept-hr
+name: Human Resources
+jsmProjectKey: HR
+icon: people
+color: "#00B8D9"
+
+slaCalendar: "Business Hours"
+sla:
+  firstResponseHours: 8
+  resolutionHours: 72
+
+agents:
+  - accountId: "REPLACE_WITH_HR_AGENT_ACCOUNT_ID"
+
+escalation:
+  afterBreachMinutes: 60
+  notifyAccountId: "REPLACE_WITH_HR_MANAGER_ACCOUNT_ID"

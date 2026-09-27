@@ -1,0 +1,20 @@
+id: api-hris
+name: "HR Information System"
+baseUrl: "https://hris.acme.com/api/v3"
+
+authType: api-key
+auth:
+  credentialSecretKey: HRIS_API_KEY
+  placement: header
+  headerName: "X-API-Key"
+
+headers:
+  Accept: application/json
+
+allowedPaths:
+  - /employees/*
+  - /departments/*
+  - /positions
+
+timeout: 8000
+retries: 3
