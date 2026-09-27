@@ -5,8 +5,8 @@
  * Handles: issue_created, issue_updated, issue_resolved
  */
 
-import type { ForgeContext } from '../types';
 import { getConfig } from '../config-loader';
+import { sendNotification } from '../services/notifications';
 
 interface JiraIssueEvent {
   issue: {
@@ -25,7 +25,7 @@ interface JiraIssueEvent {
   };
 }
 
-export async function handler(event: JiraIssueEvent, _context: ForgeContext): Promise<void> {
+export async function handler(event: JiraIssueEvent, _context: any): Promise<void> {
   const projectKey = event.issue.fields.project.key;
   const config = getConfig();
 
@@ -65,7 +65,12 @@ async function handleIssueCreated(
       console.info(
         `[issue-events] Notify ${queue.notifyOnNew.channel}:${queue.notifyOnNew.target} — new issue ${issue.key}`,
       );
-      // TODO Phase 5: dispatch actual notification
+      await sendNotification({
+        channel: queue.notifyOnNew.channel,
+        target: queue.notifyOnNew.target,
+        message: `New issue created in queue "${queue.name}": ${issue.key} - ${issue.fields.summary}\nAssignee: ${issue.fields.assignee?.accountId || 'Unassigned'}`,
+        dept,
+      });
     }
   }
 }
@@ -80,17 +85,31 @@ async function handleIssueUpdated(
     console.info(
       `[issue-events] SLA breached on ${event.issue.key} — escalating to ${dept.escalation.notifyAccountId}`,
     );
-    // TODO Phase 5: send escalation notification
+    const config = getConfig();
+    const defaultChannel = config.global.notifications.defaultChannel;
+    await sendNotification({
+      channel: defaultChannel,
+      target: dept.escalation.notifyAccountId,
+      message: `🚨 SLA BREACH on ${event.issue.key} - ${event.issue.fields.summary}. Escalated to ${dept.escalation.notifyAccountId}.`,
+      dept,
+    });
   }
 }
 
 async function handleIssueResolved(
   event: JiraIssueEvent,
-  _dept: ReturnType<typeof getConfig>['departments'][0],
+  dept: ReturnType<typeof getConfig>['departments'][0],
 ): Promise<void> {
   // Dispatch CSAT survey
   console.info(`[issue-events] Issue resolved: ${event.issue.key} — dispatching CSAT survey`);
-  // TODO Phase 5: send CSAT survey to reporter
+  const config = getConfig();
+  const defaultChannel = config.global.notifications.defaultChannel;
+  await sendNotification({
+    channel: defaultChannel,
+    target: "reporter", // In reality, we'd look up the reporter's email or slack
+    message: `Issue ${event.issue.key} has been resolved! Please leave us feedback at /portal/csat/${event.issue.id}`,
+    dept,
+  });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
